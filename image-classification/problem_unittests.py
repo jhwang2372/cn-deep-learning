@@ -1,199 +1,261 @@
-import os
-import numpy as np
-import tensorflow as tf
-import random
-from unittest.mock import MagicMock
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+
+    <title>problem_unittests.py (editing)</title>
+    <link rel="shortcut icon" type="image/x-icon" href="/static/base/images/favicon.ico?v=97c6417ed01bdc0ae3ef32ae4894fd03">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="stylesheet" href="/static/components/jquery-ui/themes/smoothness/jquery-ui.min.css?v=9b2c8d3489227115310662a343fce11c" type="text/css" />
+    <link rel="stylesheet" href="/static/components/jquery-typeahead/dist/jquery.typeahead.min.css?v=7afb461de36accb1aa133a1710f5bc56" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    
+<link rel="stylesheet" href="/static/components/codemirror/lib/codemirror.css?v=f25e9a9159e54b423b5a8dc4b1ab5c6e">
+<link rel="stylesheet" href="/static/components/codemirror/addon/dialog/dialog.css?v=c89dce10b44d2882a024e7befc2b63f5">
+
+    <link rel="stylesheet" href="/static/style/style.min.css?v=29c09309dd70e7fe93378815e5f022ae" type="text/css"/>
+    
+
+    <link rel="stylesheet" href="/custom/custom.css" type="text/css" />
+    <script src="/static/components/es6-promise/promise.min.js?v=f004a16cb856e0ff11781d01ec5ca8fe" type="text/javascript" charset="utf-8"></script>
+    <script src="/static/components/preact/index.js?v=5b98fce8b86ce059de89f9e728e16957" type="text/javascript"></script>
+    <script src="/static/components/proptypes/index.js?v=c40890eb04df9811fcc4d47e53a29604" type="text/javascript"></script>
+    <script src="/static/components/preact-compat/index.js?v=d376eb109a00b9b2e8c0d30782eb6df7" type="text/javascript"></script>
+    <script src="/static/components/requirejs/require.js?v=6da8be361b9ee26c5e721e76c6d4afce" type="text/javascript" charset="utf-8"></script>
+    <script>
+      require.config({
+          
+          urlArgs: "v=20180905014756",
+          
+          baseUrl: '/static/',
+          paths: {
+            'auth/js/main': 'auth/js/main.min',
+            custom : '/custom',
+            nbextensions : '/nbextensions',
+            kernelspecs : '/kernelspecs',
+            underscore : 'components/underscore/underscore-min',
+            backbone : 'components/backbone/backbone-min',
+            jquery: 'components/jquery/jquery.min',
+            bootstrap: 'components/bootstrap/js/bootstrap.min',
+            bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
+            'jquery-ui': 'components/jquery-ui/ui/minified/jquery-ui.min',
+            moment: 'components/moment/moment',
+            codemirror: 'components/codemirror',
+            termjs: 'components/xterm.js/dist/xterm',
+            typeahead: 'components/jquery-typeahead/dist/jquery.typeahead.min',
+          },
+          map: { // for backward compatibility
+              "*": {
+                  "jqueryui": "jquery-ui",
+              }
+          },
+          shim: {
+            typeahead: {
+              deps: ["jquery"],
+              exports: "typeahead"
+            },
+            underscore: {
+              exports: '_'
+            },
+            backbone: {
+              deps: ["underscore", "jquery"],
+              exports: "Backbone"
+            },
+            bootstrap: {
+              deps: ["jquery"],
+              exports: "bootstrap"
+            },
+            bootstraptour: {
+              deps: ["bootstrap"],
+              exports: "Tour"
+            },
+            "jquery-ui": {
+              deps: ["jquery"],
+              exports: "$"
+            }
+          },
+          waitSeconds: 30,
+      });
+
+      require.config({
+          map: {
+              '*':{
+                'contents': 'services/contents',
+              }
+          }
+      });
+
+      // error-catching custom.js shim.
+      define("custom", function (require, exports, module) {
+          try {
+              var custom = require('custom/custom');
+              console.debug('loaded custom.js');
+              return custom;
+          } catch (e) {
+              console.error("error loading custom.js", e);
+              return {};
+          }
+      })
+    </script>
+
+    
+    
+
+</head>
+
+<body class="edit_app "
+ 
+data-base-url="/"
+data-file-path="problem_unittests.py"
+
+  
+ 
+
+dir="ltr">
+
+<noscript>
+    <div id='noscript'>
+      Jupyter Notebook requires JavaScript.<br>
+      Please enable it to proceed.
+  </div>
+</noscript>
+
+<div id="header">
+  <div id="header-container" class="container">
+  <div id="ipython_notebook" class="nav navbar-brand pull-left"><a href="/tree" title='dashboard'><img src='/static/base/images/logo.png?v=641991992878ee24c6f3826e81054a0f' alt='Jupyter Notebook'/></a></div>
+
+  
+  
+  
 
+    <span id="login_widget">
+      
+    </span>
 
-def _print_success_message():
-    print('Tests Passed')
+  
 
+  
 
-def test_folder_path(cifar10_dataset_folder_path):
-    assert cifar10_dataset_folder_path is not None,\
-        'Cifar-10 data folder not set.'
-    assert cifar10_dataset_folder_path[-1] != '/',\
-        'The "/" shouldn\'t be added to the end of the path.'
-    assert os.path.exists(cifar10_dataset_folder_path),\
-        'Path not found.'
-    assert os.path.isdir(cifar10_dataset_folder_path),\
-        '{} is not a folder.'.format(os.path.basename(cifar10_dataset_folder_path))
-
-    train_files = [cifar10_dataset_folder_path + '/data_batch_' + str(batch_id) for batch_id in range(1, 6)]
-    other_files = [cifar10_dataset_folder_path + '/batches.meta', cifar10_dataset_folder_path + '/test_batch']
-    missing_files = [path for path in train_files + other_files if not os.path.exists(path)]
-
-    assert not missing_files,\
-        'Missing files in directory: {}'.format(missing_files)
-
-    print('All files found!')
-
-
-def test_normalize(normalize):
-    test_shape = (np.random.choice(range(1000)), 32, 32, 3)
-    test_numbers = np.random.choice(range(256), test_shape)
-    normalize_out = normalize(test_numbers)
-
-    assert type(normalize_out).__module__ == np.__name__,\
-        'Not Numpy Object'
-
-    assert normalize_out.shape == test_shape,\
-        'Incorrect Shape. {} shape found'.format(normalize_out.shape)
-
-    assert normalize_out.max() <= 1 and normalize_out.min() >= 0,\
-        'Incorect Range. {} to {} found'.format(normalize_out.min(), normalize_out.max())
-
-    _print_success_message()
-
-
-def test_one_hot_encode(one_hot_encode):
-    test_shape = np.random.choice(range(1000))
-    test_numbers = np.random.choice(range(10), test_shape)
-    one_hot_out = one_hot_encode(test_numbers)
-
-    assert type(one_hot_out).__module__ == np.__name__,\
-        'Not Numpy Object'
-
-    assert one_hot_out.shape == (test_shape, 10),\
-        'Incorrect Shape. {} shape found'.format(one_hot_out.shape)
-
-    n_encode_tests = 5
-    test_pairs = list(zip(test_numbers, one_hot_out))
-    test_indices = np.random.choice(len(test_numbers), n_encode_tests)
-    labels = [test_pairs[test_i][0] for test_i in test_indices]
-    enc_labels = np.array([test_pairs[test_i][1] for test_i in test_indices])
-    new_enc_labels = one_hot_encode(labels)
-
-    assert np.array_equal(enc_labels, new_enc_labels),\
-        'Encodings returned different results for the same numbers.\n' \
-        'For the first call it returned:\n' \
-        '{}\n' \
-        'For the second call it returned\n' \
-        '{}\n' \
-        'Make sure you save the map of labels to encodings outside of the function.'.format(enc_labels, new_enc_labels)
-
-    _print_success_message()
-
-
-def test_nn_image_inputs(neural_net_image_input):
-    image_shape = (32, 32, 3)
-    nn_inputs_out_x = neural_net_image_input(image_shape)
-
-    assert nn_inputs_out_x.get_shape().as_list() == [None, image_shape[0], image_shape[1], image_shape[2]],\
-        'Incorrect Image Shape.  Found {} shape'.format(nn_inputs_out_x.get_shape().as_list())
-
-    assert nn_inputs_out_x.op.type == 'Placeholder',\
-        'Incorrect Image Type.  Found {} type'.format(nn_inputs_out_x.op.type)
-
-    assert nn_inputs_out_x.name == 'x:0', \
-        'Incorrect Name.  Found {}'.format(nn_inputs_out_x.name)
-
-    print('Image Input Tests Passed.')
-
-
-def test_nn_label_inputs(neural_net_label_input):
-    n_classes = 10
-    nn_inputs_out_y = neural_net_label_input(n_classes)
-
-    assert nn_inputs_out_y.get_shape().as_list() == [None, n_classes],\
-        'Incorrect Label Shape.  Found {} shape'.format(nn_inputs_out_y.get_shape().as_list())
-
-    assert nn_inputs_out_y.op.type == 'Placeholder',\
-        'Incorrect Label Type.  Found {} type'.format(nn_inputs_out_y.op.type)
-
-    assert nn_inputs_out_y.name == 'y:0', \
-        'Incorrect Name.  Found {}'.format(nn_inputs_out_y.name)
-
-    print('Label Input Tests Passed.')
-
-
-def test_nn_keep_prob_inputs(neural_net_keep_prob_input):
-    nn_inputs_out_k = neural_net_keep_prob_input()
-
-    assert nn_inputs_out_k.get_shape().ndims is None,\
-        'Too many dimensions found for keep prob.  Found {} dimensions.  It should be a scalar (0-Dimension Tensor).'.format(nn_inputs_out_k.get_shape().ndims)
-
-    assert nn_inputs_out_k.op.type == 'Placeholder',\
-        'Incorrect keep prob Type.  Found {} type'.format(nn_inputs_out_k.op.type)
-
-    assert nn_inputs_out_k.name == 'keep_prob:0', \
-        'Incorrect Name.  Found {}'.format(nn_inputs_out_k.name)
-
-    print('Keep Prob Tests Passed.')
-
-
-def test_con_pool(conv2d_maxpool):
-    test_x = tf.placeholder(tf.float32, [None, 32, 32, 5])
-    test_num_outputs = 10
-    test_con_k = (2, 2)
-    test_con_s = (4, 4)
-    test_pool_k = (2, 2)
-    test_pool_s = (2, 2)
-
-    conv2d_maxpool_out = conv2d_maxpool(test_x, test_num_outputs, test_con_k, test_con_s, test_pool_k, test_pool_s)
-
-    assert conv2d_maxpool_out.get_shape().as_list() == [None, 4, 4, 10],\
-        'Incorrect Shape.  Found {} shape'.format(conv2d_maxpool_out.get_shape().as_list())
-
-    _print_success_message()
-
-
-def test_flatten(flatten):
-    test_x = tf.placeholder(tf.float32, [None, 10, 30, 6])
-    flat_out = flatten(test_x)
-
-    assert flat_out.get_shape().as_list() == [None, 10*30*6],\
-        'Incorrect Shape.  Found {} shape'.format(flat_out.get_shape().as_list())
-
-    _print_success_message()
-
-
-def test_fully_conn(fully_conn):
-    test_x = tf.placeholder(tf.float32, [None, 128])
-    test_num_outputs = 40
-
-    fc_out = fully_conn(test_x, test_num_outputs)
-
-    assert fc_out.get_shape().as_list() == [None, 40],\
-        'Incorrect Shape.  Found {} shape'.format(fc_out.get_shape().as_list())
-
-    _print_success_message()
-
-
-def test_output(output):
-    test_x = tf.placeholder(tf.float32, [None, 128])
-    test_num_outputs = 40
-
-    output_out = output(test_x, test_num_outputs)
-
-    assert output_out.get_shape().as_list() == [None, 40],\
-        'Incorrect Shape.  Found {} shape'.format(output_out.get_shape().as_list())
-
-    _print_success_message()
-
-
-def test_conv_net(conv_net):
-    test_x = tf.placeholder(tf.float32, [None, 32, 32, 3])
-    test_k = tf.placeholder(tf.float32)
-
-    logits_out = conv_net(test_x, test_k)
-
-    assert logits_out.get_shape().as_list() == [None, 10],\
-        'Incorrect Model Output.  Found {}'.format(logits_out.get_shape().as_list())
-
-    print('Neural Network Built!')
-
-
-def test_train_nn(train_neural_network):
-    mock_session = tf.Session()
-    test_x = np.random.rand(128, 32, 32, 3)
-    test_y = np.random.rand(128, 10)
-    test_k = np.random.rand(1)
-    test_optimizer = tf.train.AdamOptimizer()
-
-    mock_session.run = MagicMock()
-    train_neural_network(mock_session, test_optimizer, test_k, test_x, test_y)
-
-    assert mock_session.run.called, 'Session not used'
-
-    _print_success_message()
+  
+
+<span id="save_widget" class="pull-left save_widget">
+    <span class="filename"></span>
+    <span class="last_modified"></span>
+</span>
+
+
+  </div>
+  <div class="header-bar"></div>
+
+  
+
+<div id="menubar-container" class="container">
+  <div id="menubar">
+    <div id="menus" class="navbar navbar-default" role="navigation">
+      <div class="container-fluid">
+          <p  class="navbar-text indicator_area">
+          <span id="current-mode" >current mode</span>
+          </p>
+        <button type="button" class="btn btn-default navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <i class="fa fa-bars"></i>
+          <span class="navbar-text">Menu</span>
+        </button>
+        <ul class="nav navbar-nav navbar-right">
+          <li id="notification_area"></li>
+        </ul>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">File</a>
+              <ul id="file-menu" class="dropdown-menu">
+                <li id="new-file"><a href="#">New</a></li>
+                <li id="save-file"><a href="#">Save</a></li>
+                <li id="rename-file"><a href="#">Rename</a></li>
+                <li id="download-file"><a href="#">Download</a></li>
+              </ul>
+            </li>
+            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit</a>
+              <ul id="edit-menu" class="dropdown-menu">
+                <li id="menu-find"><a href="#">Find</a></li>
+                <li id="menu-replace"><a href="#">Find &amp; Replace</a></li>
+                <li class="divider"></li>
+                <li class="dropdown-header">Key Map</li>
+                <li id="menu-keymap-default"><a href="#">Default<i class="fa"></i></a></li>
+                <li id="menu-keymap-sublime"><a href="#">Sublime Text<i class="fa"></i></a></li>
+                <li id="menu-keymap-vim"><a href="#">Vim<i class="fa"></i></a></li>
+                <li id="menu-keymap-emacs"><a href="#">emacs<i class="fa"></i></a></li>
+              </ul>
+            </li>
+            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">View</a>
+              <ul id="view-menu" class="dropdown-menu">
+              <li id="toggle_header" title="Show/Hide the logo and notebook title (above menu bar)">
+              <a href="#">Toggle Header</a></li>
+              <li id="menu-line-numbers"><a href="#">Toggle Line Numbers</a></li>
+              </ul>
+            </li>
+            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Language</a>
+              <ul id="mode-menu" class="dropdown-menu">
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="lower-header-bar"></div>
+
+
+</div>
+
+<div id="site">
+
+
+<div id="texteditor-backdrop">
+<div id="texteditor-container" class="container"></div>
+</div>
+
+
+</div>
+
+
+
+
+
+
+    
+
+
+<script src="/static/edit/js/main.min.js?v=7eb6af843396244a81afb577aedbaf89" type="text/javascript" charset="utf-8"></script>
+
+
+<script type='text/javascript'>
+  function _remove_token_from_url() {
+    if (window.location.search.length <= 1) {
+      return;
+    }
+    var search_parameters = window.location.search.slice(1).split('&');
+    for (var i = 0; i < search_parameters.length; i++) {
+      if (search_parameters[i].split('=')[0] === 'token') {
+        // remote token from search parameters
+        search_parameters.splice(i, 1);
+        var new_search = '';
+        if (search_parameters.length) {
+          new_search = '?' + search_parameters.join('&');
+        }
+        var new_url = window.location.origin + 
+                      window.location.pathname + 
+                      new_search + 
+                      window.location.hash;
+        window.history.replaceState({}, "", new_url);
+        return;
+      }
+    }
+  }
+  _remove_token_from_url();
+</script>
+</body>
+
+</html>
